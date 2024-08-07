@@ -47,18 +47,33 @@ const confirm = async (req, res) => {
 };
 
 const authenticate = async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
 
   //Check if the user exist
-  const userExist = await Veterinary.findOne({ email });
-  if (!userExist) {
+  const user = await Veterinary.findOne({ email });
+  if (!user) {
     const error = new Error('The user does not exist');
     return res.status(403).json({ msg: error.message });
   }
 
   //Check if the user is confirmed
+  if (!user.confirmed) {
+    const error = new Error('Your account is not confirmed');
+    return res.status(403).json({ msg: error.message });
+  }
 
-  
+  //Check the password
+  if (await user.checkPassword(password)) {
+    console.log('Correct password');
+    //User Authentication
+
+
+    
+  } else {
+    console.log('Incorrect password');
+    const error = new Error('Incorrect password');
+    return res.status(403).json({ msg: error.message });
+  }
 };
 
 export { register, profile, confirm, authenticate };
