@@ -4,7 +4,7 @@ import connectDB from './config/db.js';
 import veterinaryRoute from './routes/veterinaryRoute.js';
 
 const app = express(); //In this app variable we are going to have all the functionality required by the server
-
+app.use(express.json());
 dotenv.config(); // setting the environment variables
 
 connectDB();
