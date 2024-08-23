@@ -1,5 +1,6 @@
 import Veterinary from '../models/Veterinary.js';
 import generateJWT from '../helpers/generateJWT.js';
+import generateId from '../helpers/generateId.js';
 
 const register = async (req, res) => {
   const { email } = req.body;
@@ -23,7 +24,8 @@ const register = async (req, res) => {
 };
 
 const profile = (req, res) => {
-  res.json({ msg: 'Showing profile' });
+  const { veterinary } = req;
+  res.json({ profile: veterinary });
 };
 
 const confirm = async (req, res) => {
@@ -75,4 +77,71 @@ const authenticate = async (req, res) => {
   }
 };
 
-export { register, profile, confirm, authenticate };
+const forgetPassword = async (req, res) => {
+  const { email } = req.body;
+  console.log(email);
+
+  const veterinaryExist = await Veterinary.findOne({ email });
+
+  if (!veterinaryExist) {
+    const error = new Error('Email does not exist');
+    return res.status(400).json({ msg: error.message });
+  }
+
+  try {
+    veterinaryExist.token = generateId();
+    await veterinaryExist.save();
+
+    res.json({ msg: 'Whe have sent an email with the instructions' });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const checkToken = async (req, res) => {
+  const { token } = req.params;
+
+  const validToken = await Veterinary.findOne({ token });
+
+  if (validToken) {
+    // Token is valid, user exist
+    res.json({ msg: 'Valid token and user exist' });
+  } else {
+    const error = new Error('Invalid token');
+    return res.status(400).json({ msg: error.message });
+  }
+};
+
+const newPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  const veterinary = await Veterinary.findOne({ token });
+
+  if (!veterinary) {
+    const error = new Error('There was a mistake');
+    return res.status(400).json({ msg: error.message });
+  }
+
+  try {
+    veterinary.token = null;
+    veterinary.password = password;
+    console.log(veterinary);
+
+    await veterinary.save();
+
+    res.json({ msg: 'Password successfully modified' });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export {
+  register,
+  profile,
+  confirm,
+  authenticate,
+  forgetPassword,
+  checkToken,
+  newPassword,
+};
